@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Æfingaakstur</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+
+        h1, h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .button:hover {
+            opacity: 0.9;
+        }
+
+        .button-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .button-small {
+            width: auto;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .button-delete {
+            background: #ff4444;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-left: 10px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .button-delete:hover {
+            background: #cc0000;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .item {
+            background: #f8f9ff;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .session-item {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .empty {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+        }
+
+        .welcome-box {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .time-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .time-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .time-stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .time-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .car-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .car-option {
+            padding: 20px;
+            border: 3px solid #e0e0e0;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .car-option:hover {
+            border-color: #667eea;
+        }
+
+        .car-option.active {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .car-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .stars {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .star {
+            font-size: 32px;
+            cursor: pointer;
+            color: #ddd;
+            user-select: none;
+        }
+
+        .star.active {
+            color: #ffd700;
+        }
+
+        .exercise-list {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f8f9ff;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .exercise-item {
+            padding: 10px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+
+        .exercise-item:hover {
+            border-color: #667eea;
+        }
+
+        .exercise-item.selected {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+
+        .tag {
+            display: inline-block;
+            background: #e0e7ff;
+            color: #4338ca;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin: 4px 4px 0 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app"></div>
+
+    <script>
+        // Data
+        const data = {
+            user: '',
+            userSSN: '',
+            instructorName: '',
+            instructorEmail: '',
+            instructors: [],
+            sessions: [],
+            page: 'login',
+            // Fyrir nýja æfingu
+            selectedCar: '',
+            selectedRating: 0,
+            selectedExercises: []
+        };
+
+        const exercises = [
+            'Skipting og hemlun',
+            'Bifreið tekin af stað í brekku',
+            'Akstur aftur á bak',
+            'Lagning í bifreiðastæði',
+            'Ekið af stað og numið staðar',
+            'Vinstri beygja af tvístefnuakstursgötu',
+            'Vinstri beygja af einstefnuakstursgötu',
+            'Akstur í hringtorgum',
+            'Akreinaskipti',
+            'Akstur á að- og fráreinum',
+            'Framúrakstur',
+            'Akstur í myrkri',
+            'Akstur í hálku',
+            'Akstur á malarvegi',
+            'Staðsetning á akbraut og breidd ökutækis',
+            'Hægri reglan',
+            'Umferðarljós',
+            'Umferðarmerkin',
+            'Hjólandi og gangandi vegfarendur',
+            'Forgangur strætisvagna',
+            'Viðhorf og forvarnir',
+            'Bakka með eftirvagn'
+        ];
+
+        // Render
+        function render() {
+            const app = document.getElementById('app');
+            
+            if (data.page === 'login') {
+                app.innerHTML = `
+                    <div class="card">
+                        <h1>🚗 Æfingaakstur</h1>
+                        <p class="subtitle">Skráðu þig til að byrja</p>
+                        <div class="form-group">
+                            <label>Nafn þitt (nemandi)</label>
+                            <input type="text" id="userName" placeholder="Fullt nafn">
+                        </div>
+                        <div class="form-group">
+                            <label>Kennitala</label>
+                            <input type="text" id="userSSN" placeholder="000000-0000" maxlength="11">
+                        </div>
+                        <div class="form-group">
+                            <label>Nafn ökukennara</label>
+                            <input type="text" id="instructorName" placeholder="Nafn ökukennara">
+                        </div>
+                        <div class="form-group">
+                            <label>Netfang ökukennara</label>
+                            <input type="text" id="instructorEmail" placeholder="okukennari@example.is">
+                        </div>
+                        <button class="button" onclick="login()">Byrja</button>
+                    </div>
+                `;
+            }
+            
+            else if (data.page === 'instructors') {
+                let list = '';
+                if (data.instructors.length === 0) {
+                    list = '<p class="empty">Engir æfingaaðilar ennþá</p>';
+                } else {
+                    data.instructors.forEach((name, i) => {
+                        list += '<div class="item">' +
+                            '<span>👥 ' + name + '</span>' +
+                            '<button class="button button-delete delete-instr-btn" data-idx="' + i + '">Fjarlægja</button>' +
+                            '</div>';
+                    });
+                }
+                
+                app.innerHTML = `
+                    <div class="card">
+                        <h2>Velkominn/n, ${data.user}! 👋</h2>
+                        <p class="subtitle">Bættu við æfingaaðilum</p>
+                        ${list}
+                        <div class="form-group" style="margin-top: 20px;">
+                            <label>Bæta við æfingaaðila</label>
+                            <input type="text" id="newInstructor">
+                        </div>
+                        <button class="button button-small" onclick="addInstructor()">➕ Bæta við</button>
+                        <button class="button" onclick="goToMain()" style="margin-top: 20px;">Halda áfram</button>
+                    </div>
+                `;
+                
+                // Bæta við event listeners fyrir delete takka
+                setTimeout(() => {
+                    document.querySelectorAll('.delete-instr-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const idx = parseInt(this.getAttribute('data-idx'));
+                            deleteInstructor(idx);
+                        });
+                    });
+                }, 0);
+            }
+            
+            else if (data.page === 'main') {
+                const totalMin = data.sessions.reduce((sum, s) => sum + (s.minutes || 0), 0);
+                
+                // Telja einkvæma daga
+                const uniqueDates = new Set(data.sessions.map(s => s.date));
+                const totalDays = uniqueDates.size;
+                
+                let sessionList = '';
+                if (data.sessions.length === 0) {
+                    sessionList = '<p class="empty">Engar æfingar skráðar</p>';
+                } else {
+                    data.sessions.forEach(s => {
+                        const date = new Date(s.date + 'T00:00:00');
+                        const dateStr = date.toLocaleDateString('is-IS', { year: 'numeric', month: 'long', day: 'numeric' });
+                        const stars = s.rating > 0 ? '★'.repeat(s.rating) : '';
+                        
+                        let tags = '';
+                        if (s.exercises && s.exercises.length > 0) {
+                            s.exercises.forEach(ex => {
+                                tags += '<span class="tag">✓ ' + ex + '</span>';
+                            });
+                        }
+                        
+                        sessionList += '<div class="session-item">' +
+                            '<div style="display: flex; justify-content: space-between; margin-bottom: 8px;">' +
+                            '<strong>📅 ' + dateStr + '</strong>' +
+                            '<span style="color: #ffd700; font-size: 18px;">' + stars + '</span>' +
+                            '</div>' +
+                            '<div style="color: #666; margin-top: 4px;">🚗 ' + s.car + '</div>' +
+                            '<div style="color: #666; margin-top: 4px;">👥 ' + s.instructor + '</div>' +
+                            '<div style="color: #667eea; font-weight: 600; margin-top: 4px;">⏱️ ' + s.minutes + ' mínútur</div>' +
+                            (tags ? '<div style="margin-top: 8px;">' + tags + '</div>' : '') +
+                            '<button class="button button-secondary" onclick="editSession(' + s.id + ')" style="margin-top: 10px;">✏️ Breyta</button>' +
+                            '</div>';
+                    });
+                }
+                
+                app.innerHTML = `
+                    <div class="card">
+                        <div class="welcome-box">
+                            <p><strong>👤 Nemandi:</strong> ${data.user}</p>
+                            <p><strong>👥 Æfingaaðilar:</strong> ${data.instructors.length}</p>
+                        </div>
+                        <div class="time-box">
+                            <h3>⏱️ Heildartími</h3>
+                            <div class="time-stats">
+                                <div class="time-stat">
+                                    <div class="time-value">${totalMin}</div>
+                                    <div>Mínútur</div>
+                                </div>
+                                <div class="time-stat">
+                                    <div class="time-value">${totalDays}</div>
+                                    <div>Skráðir dagar</div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="button" onclick="newSession()">➕ Ný æfing</button>
+                        <button class="button button-secondary" onclick="showStatistics()">📊 Tölfræði</button>
+                        <button class="button button-secondary" onclick="manageInstructors()">Stjórna æfingaaðilum</button>
+                        <button class="button button-secondary" onclick="sendPDFReport()">📄 Senda PDF skýrslu</button>
+                    </div>
+                    <div class="card">
+                        <h2>Mínar æfingar (${data.sessions.length})</h2>
+                        ${sessionList}
+                    </div>
+                `;
+            }
+            
+            else if (data.page === 'newSession') {
+                const today = new Date().toISOString().split('T')[0];
+                
+                let instructorOptions = '<option value="">Veldu æfingaaðila</option>';
+                data.instructors.forEach(name => {
+                    instructorOptions += `<option value="${name}">${name}</option>`;
+                });
+                
+                let exerciseList = '';
+                exercises.forEach((ex, i) => {
+                    const selected = data.selectedExercises.includes(ex) ? 'selected' : '';
+                    exerciseList += '<div class="exercise-item ' + selected + '" onclick="toggleExercise(\'' + ex.replace(/'/g, "\\'") + '\')">' + ex + '</div>';
+                });
+                
+                app.innerHTML = `
+                    <div class="card">
+                        <h2>Ný æfing</h2>
+                        
+                        <div class="form-group">
+                            <label>Dagsetning</label>
+                            <input type="date" id="sessionDate" value="${today}">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Tími (mínútur)</label>
+                            <input type="number" id="sessionMinutes" min="1" placeholder="60">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Æfingaaðili</label>
+                            <select id="sessionInstructor">${instructorOptions}</select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Tegund bíls</label>
+                            <div class="car-options">
+                                <div class="car-option ${data.selectedCar === 'Sjálfskiptur' ? 'active' : ''}" onclick="selectCar('Sjálfskiptur')">
+                                    <div class="car-icon">🔄</div>
+                                    <div>Sjálfskiptur</div>
+                                </div>
+                                <div class="car-option ${data.selectedCar === 'Beinskiptur' ? 'active' : ''}" onclick="selectCar('Beinskiptur')">
+                                    <div class="car-icon">⚙️</div>
+                                    <div>Beinskiptur</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Hvernig gekk?</label>
+                            <div class="stars">
+                                <span class="star ${1 <= data.selectedRating ? 'active' : ''}" onclick="setRating(1)">★</span>
+                                <span class="star ${2 <= data.selectedRating ? 'active' : ''}" onclick="setRating(2)">★</span>
+                                <span class="star ${3 <= data.selectedRating ? 'active' : ''}" onclick="setRating(3)">★</span>
+                                <span class="star ${4 <= data.selectedRating ? 'active' : ''}" onclick="setRating(4)">★</span>
+                                <span class="star ${5 <= data.selectedRating ? 'active' : ''}" onclick="setRating(5)">★</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Æfingar (valfrjálst)</label>
+                            <div class="exercise-list">${exerciseList}</div>
+                        </div>
+                        
+                        <button class="button" onclick="saveSession()">Vista æfingu</button>
+                        <button class="button button-secondary" onclick="cancelSession()">Hætta við</button>
+                    </div>
+                `;
+            }
+            
+            else if (data.page === 'statistics') {
+                // Reikna tölfræði fyrir hvern æfingaaðila
+                const stats = {};
+                
+                data.sessions.forEach(s => {
+                    if (!stats[s.instructor]) {
+                        stats[s.instructor] = {
+                            count: 0,
+                            minutes: 0,
+                            ratings: [],
+                            exercises: {}
+                        };
+                    }
+                    
+                    stats[s.instructor].count++;
+                    stats[s.instructor].minutes += s.minutes || 0;
+                    if (s.rating > 0) {
+                        stats[s.instructor].ratings.push(s.rating);
+                    }
+                    
+                    if (s.exercises) {
+                        s.exercises.forEach(ex => {
+                            stats[s.instructor].exercises[ex] = (stats[s.instructor].exercises[ex] || 0) + 1;
+                        });
+                    }
+                });
+                
+                let statsHTML = '';
+                
+                if (Object.keys(stats).length === 0) {
+                    statsHTML = '<p class="empty">Engar æfingar skráðar ennþá</p>';
+                } else {
+                    Object.keys(stats).forEach(instructor => {
+                        const s = stats[instructor];
+                        const avgRating = s.ratings.length > 0 
+                            ? (s.ratings.reduce((a, b) => a + b, 0) / s.ratings.length).toFixed(1)
+                            : 'Engin';
+                        
+                        let exerciseList = '';
+                        const sortedExercises = Object.entries(s.exercises).sort((a, b) => b[1] - a[1]);
+                        sortedExercises.forEach(([ex, count]) => {
+                            exerciseList += '<span class="tag">' + ex + ' (' + count + 'x)</span>';
+                        });
+                        
+                        statsHTML += '<div class="session-item">' +
+                            '<h3 style="color: #667eea; margin-bottom: 15px;">👥 ' + instructor + '</h3>' +
+                            '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">' +
+                            '<div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">' +
+                            '<div style="font-size: 24px; font-weight: 700; color: #667eea;">' + s.count + '</div>' +
+                            '<div style="color: #666; font-size: 14px;">Æfingar</div>' +
+                            '</div>' +
+                            '<div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">' +
+                            '<div style="font-size: 24px; font-weight: 700; color: #667eea;">' + s.minutes + '</div>' +
+                            '<div style="color: #666; font-size: 14px;">Mínútur</div>' +
+                            '</div>' +
+                            '</div>' +
+                            '<div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center;">' +
+                            '<div style="color: #666; font-size: 14px; margin-bottom: 5px;">Meðaleinkunn</div>' +
+                            '<div style="font-size: 24px; color: #ffd700;">' +
+                            (s.ratings.length > 0 ? '★'.repeat(Math.round(parseFloat(avgRating))) + ' (' + avgRating + ')' : 'Engin einkunn') +
+                            '</div>' +
+                            '</div>' +
+                            (exerciseList ? '<div><strong style="color: #333;">Mest æfðar æfingar:</strong><div style="margin-top: 8px;">' + exerciseList + '</div></div>' : '') +
+                            '</div>';
+                    });
+                }
+                
+                app.innerHTML = `
+                    <div class="card">
+                        <h2>📊 Tölfræði</h2>
+                        <p class="subtitle">Yfirlit eftir æfingaaðilum</p>
+                        ${statsHTML}
+                        <button class="button button-secondary" onclick="backToMain()" style="margin-top: 20px;">← Til baka</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Actions
+        function login() {
+            const name = document.getElementById('userName').value.trim();
+            const ssn = document.getElementById('userSSN').value.trim();
+            const instrName = document.getElementById('instructorName').value.trim();
+            const instrEmail = document.getElementById('instructorEmail').value.trim();
+            
+            if (!name) {
+                alert('Vinsamlegast sláðu inn nafn');
+                return;
+            }
+            if (!ssn) {
+                alert('Vinsamlegast sláðu inn kennitölu');
+                return;
+            }
+            if (!instrName) {
+                alert('Vinsamlegast sláðu inn nafn ökukennara');
+                return;
+            }
+            if (!instrEmail) {
+                alert('Vinsamlegast sláðu inn netfang ökukennara');
+                return;
+            }
+            
+            data.user = name;
+            data.userSSN = ssn;
+            data.instructorName = instrName;
+            data.instructorEmail = instrEmail;
+            data.page = 'instructors';
+            render();
+        }
+
+        function addInstructor() {
+            const name = document.getElementById('newInstructor').value.trim();
+            if (!name) {
+                alert('Vinsamlegast sláðu inn nafn');
+                return;
+            }
+            if (data.instructors.includes(name)) {
+                alert('Þessi er nú þegar skráður');
+                return;
+            }
+            data.instructors.push(name);
+            render();
+        }
+
+        function deleteInstructor(index) {
+            data.instructors.splice(index, 1);
+            render();
+        }
+
+        function goToMain() {
+            data.page = 'main';
+            render();
+        }
+
+        function manageInstructors() {
+            data.page = 'instructors';
+            render();
+        }
+
+        function newSession() {
+            data.selectedCar = '';
+            data.selectedRating = 0;
+            data.selectedExercises = [];
+            data.page = 'newSession';
+            render();
+        }
+
+        function selectCar(type) {
+            // Vista gildi
+            if (document.getElementById('sessionDate')) {
+                data.tempDate = document.getElementById('sessionDate').value;
+            }
+            if (document.getElementById('sessionMinutes')) {
+                data.tempMinutes = document.getElementById('sessionMinutes').value;
+            }
+            if (document.getElementById('sessionInstructor')) {
+                data.tempInstructor = document.getElementById('sessionInstructor').value;
+            }
+            
+            data.selectedCar = type;
+            render();
+            
+            // Endurheimta gildi
+            setTimeout(() => {
+                if (data.tempDate && document.getElementById('sessionDate')) {
+                    document.getElementById('sessionDate').value = data.tempDate;
+                }
+                if (data.tempMinutes && document.getElementById('sessionMinutes')) {
+                    document.getElementById('sessionMinutes').value = data.tempMinutes;
+                }
+                if (data.tempInstructor && document.getElementById('sessionInstructor')) {
+                    document.getElementById('sessionInstructor').value = data.tempInstructor;
+                }
+            }, 0);
+        }
+
+        function setRating(stars) {
+            // Vista gildi
+            if (document.getElementById('sessionDate')) {
+                data.tempDate = document.getElementById('sessionDate').value;
+            }
+            if (document.getElementById('sessionMinutes')) {
+                data.tempMinutes = document.getElementById('sessionMinutes').value;
+            }
+            if (document.getElementById('sessionInstructor')) {
+                data.tempInstructor = document.getElementById('sessionInstructor').value;
+            }
+            
+            data.selectedRating = stars;
+            render();
+            
+            // Endurheimta gildi
+            setTimeout(() => {
+                if (data.tempDate && document.getElementById('sessionDate')) {
+                    document.getElementById('sessionDate').value = data.tempDate;
+                }
+                if (data.tempMinutes && document.getElementById('sessionMinutes')) {
+                    document.getElementById('sessionMinutes').value = data.tempMinutes;
+                }
+                if (data.tempInstructor && document.getElementById('sessionInstructor')) {
+                    document.getElementById('sessionInstructor').value = data.tempInstructor;
+                }
+            }, 0);
+        }
+
+        function toggleExercise(ex) {
+            // Vista gildi úr formi áður en við renderum aftur
+            if (document.getElementById('sessionDate')) {
+                data.tempDate = document.getElementById('sessionDate').value;
+            }
+            if (document.getElementById('sessionMinutes')) {
+                data.tempMinutes = document.getElementById('sessionMinutes').value;
+            }
+            if (document.getElementById('sessionInstructor')) {
+                data.tempInstructor = document.getElementById('sessionInstructor').value;
+            }
+            
+            const index = data.selectedExercises.indexOf(ex);
+            if (index > -1) {
+                data.selectedExercises.splice(index, 1);
+            } else {
+                data.selectedExercises.push(ex);
+            }
+            render();
+            
+            // Endurheimta gildi eftir render
+            setTimeout(() => {
+                if (data.tempDate && document.getElementById('sessionDate')) {
+                    document.getElementById('sessionDate').value = data.tempDate;
+                }
+                if (data.tempMinutes && document.getElementById('sessionMinutes')) {
+                    document.getElementById('sessionMinutes').value = data.tempMinutes;
+                }
+                if (data.tempInstructor && document.getElementById('sessionInstructor')) {
+                    document.getElementById('sessionInstructor').value = data.tempInstructor;
+                }
+            }, 0);
+        }
+
+        function saveSession() {
+            const date = document.getElementById('sessionDate').value;
+            const minutes = parseInt(document.getElementById('sessionMinutes').value);
+            const instructor = document.getElementById('sessionInstructor').value;
+            
+            if (!date) {
+                alert('Veldu dagsetningu');
+                return;
+            }
+            if (!instructor) {
+                alert('Veldu æfingaaðila');
+                return;
+            }
+            if (!data.selectedCar) {
+                alert('Veldu bílategund');
+                return;
+            }
+            if (!minutes || minutes <= 0) {
+                alert('Skráðu tíma');
+                return;
+            }
+            
+            data.sessions.unshift({
+                id: Date.now(),
+                date: date,
+                minutes: minutes,
+                instructor: instructor,
+                car: data.selectedCar,
+                rating: data.selectedRating,
+                exercises: [...data.selectedExercises]
+            });
+            
+            data.page = 'main';
+            render();
+        }
+
+        function editSession(id) {
+            const session = data.sessions.find(s => s.id === id);
+            if (!session) return;
+            
+            data.selectedCar = session.car;
+            data.selectedRating = session.rating;
+            data.selectedExercises = [...session.exercises];
+            
+            data.sessions = data.sessions.filter(s => s.id !== id);
+            data.page = 'newSession';
+            render();
+            
+            setTimeout(() => {
+                document.getElementById('sessionDate').value = session.date;
+                document.getElementById('sessionMinutes').value = session.minutes;
+                document.getElementById('sessionInstructor').value = session.instructor;
+            }, 10);
+        }
+
+        function cancelSession() {
+            data.page = 'main';
+            render();
+        }
+
+        function showStatistics() {
+            data.page = 'statistics';
+            render();
+        }
+
+        function backToMain() {
+            data.page = 'main';
+            render();
+        }
+
+        function sendPDFReport() {
+            if (data.sessions.length === 0) {
+                alert('Engar æfingar til að senda í skýrslu');
+                return;
+            }
+            
+            // Búa til PDF skýrslu
+            let report = '=== ÆFINGAAKSTUR SKÝRSLA ===\n\n';
+            report += 'NEMANDI\n';
+            report += 'Nafn: ' + data.user + '\n';
+            report += 'Kennitala: ' + data.userSSN + '\n\n';
+            report += 'ÖKUKENNARI\n';
+            report += 'Nafn: ' + data.instructorName + '\n';
+            report += 'Netfang: ' + data.instructorEmail + '\n\n';
+            report += '=== SAMANTEKT ===\n';
+            
+            const totalMin = data.sessions.reduce((sum, s) => sum + (s.minutes || 0), 0);
+            const uniqueDates = new Set(data.sessions.map(s => s.date));
+            const totalDays = uniqueDates.size;
+            
+            report += 'Heildarfjöldi æfinga: ' + data.sessions.length + '\n';
+            report += 'Heildar mínútur: ' + totalMin + '\n';
+            report += 'Fjöldi daga: ' + totalDays + '\n\n';
+            report += '=== ÆFINGAR ===\n\n';
+            
+            data.sessions.forEach((s, i) => {
+                const date = new Date(s.date + 'T00:00:00');
+                const dateStr = date.toLocaleDateString('is-IS');
+                
+                report += (i + 1) + '. ' + dateStr + '\n';
+                report += '   Æfingaaðili: ' + s.instructor + '\n';
+                report += '   Bíll: ' + s.car + '\n';
+                report += '   Tími: ' + s.minutes + ' mínútur\n';
+                report += '   Einkunn: ' + (s.rating > 0 ? '★'.repeat(s.rating) : 'Engin einkunn') + '\n';
+                
+                if (s.exercises && s.exercises.length > 0) {
+                    report += '   Æfingar:\n';
+                    s.exercises.forEach(ex => {
+                        report += '      • ' + ex + '\n';
+                    });
+                }
+                report += '\n';
+            });
+            
+            // Búa til texta skrá til niðurhals
+            const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'aefingaakstur_skyrsla_' + data.userSSN.replace('-', '') + '.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('Skýrsla hefur verið hlaðið niður!\n\nÞú getur sent skrána á: ' + data.instructorEmail);
+        }
+
+        // Start
+        render();
+    </script>
+</body>
+</html>
