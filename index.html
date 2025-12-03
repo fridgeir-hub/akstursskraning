@@ -281,6 +281,46 @@
             selectedExercises: []
         };
 
+        // Hlaða gögnum frá localStorage
+        function loadData() {
+            try {
+                const saved = localStorage.getItem('aefingaaksturData');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    data.user = parsed.user || '';
+                    data.userSSN = parsed.userSSN || '';
+                    data.instructorName = parsed.instructorName || '';
+                    data.instructorEmail = parsed.instructorEmail || '';
+                    data.instructors = parsed.instructors || [];
+                    data.sessions = parsed.sessions || [];
+                    
+                    // Ef notandi er skráður, fara beint á main
+                    if (data.user) {
+                        data.page = 'main';
+                    }
+                }
+            } catch (e) {
+                console.error('Villa við að hlaða gögnum:', e);
+            }
+        }
+
+        // Vista gögn í localStorage
+        function saveData() {
+            try {
+                const toSave = {
+                    user: data.user,
+                    userSSN: data.userSSN,
+                    instructorName: data.instructorName,
+                    instructorEmail: data.instructorEmail,
+                    instructors: data.instructors,
+                    sessions: data.sessions
+                };
+                localStorage.setItem('aefingaaksturData', JSON.stringify(toSave));
+            } catch (e) {
+                console.error('Villa við að vista gögn:', e);
+            }
+        }
+
         const exercises = [
             'Skipting og hemlun',
             'Bifreið tekin af stað í brekku',
@@ -308,6 +348,7 @@
 
         // Render
         function render() {
+            saveData(); // Vista gögn í hvert skipti sem við renderum
             const app = document.getElementById('app');
             
             if (data.page === 'login') {
@@ -434,6 +475,7 @@
                         <button class="button button-secondary" onclick="showStatistics()">📊 Tölfræði</button>
                         <button class="button button-secondary" onclick="manageInstructors()">Stjórna æfingaaðilum</button>
                         <button class="button button-secondary" onclick="sendPDFReport()">📄 Senda PDF skýrslu</button>
+                        <button class="button button-secondary" onclick="clearAllData()" style="background: #ff4444; color: white; border: none;">🗑️ Hreinsa öll gögn</button>
                     </div>
                     <div class="card">
                         <h2>Mínar æfingar (${data.sessions.length})</h2>
@@ -820,6 +862,23 @@
             render();
         }
 
+        function clearAllData() {
+            if (confirm('VIÐVÖRUN: Þetta mun eyða ÖLLUM gögnum þínum!\n\nErtu alveg viss?')) {
+                if (confirm('Ertu ALVEG ALVEG viss? Þetta er ekki hægt að afturkalla!')) {
+                    localStorage.removeItem('aefingaaksturData');
+                    data.user = '';
+                    data.userSSN = '';
+                    data.instructorName = '';
+                    data.instructorEmail = '';
+                    data.instructors = [];
+                    data.sessions = [];
+                    data.page = 'login';
+                    render();
+                    alert('Öll gögn hafa verið hreinsuð');
+                }
+            }
+        }
+
         function sendPDFReport() {
             if (data.sessions.length === 0) {
                 alert('Engar æfingar til að senda í skýrslu');
@@ -879,6 +938,7 @@
         }
 
         // Start
+        loadData();
         render();
     </script>
 </body>
