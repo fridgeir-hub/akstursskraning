@@ -362,7 +362,7 @@
                     <div class="card">
                         <h1>🚗 Æfingaakstur</h1>
                         <p class="subtitle">Skráðu þig til að byrja</p>
-                        <p style="text-align: center; color: #999; font-size: 12px; margin-bottom: 20px;">Útgáfa 1.3</p>
+                        <p style="text-align: center; color: #999; font-size: 12px; margin-bottom: 20px;">Útgáfa 1.5</p>
                         <div class="form-group">
                             <label>Nafn þitt (nemandi)</label>
                             <input type="text" id="userName" placeholder="Fullt nafn">
@@ -443,6 +443,8 @@
                     const birthDate = new Date(year, month - 1, day);
                     const birthday17 = new Date(year + 17, month - 1, day);
                     const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    birthday17.setHours(0, 0, 0, 0);
                     
                     // Ef nemandi er ekki enn orðinn 17 ára
                     if (today < birthday17) {
@@ -459,9 +461,13 @@
                             birthdayCountdown = '<p style="color: #667eea; font-weight: 600; margin-top: 8px;">🎂 ' + diffDays + ' dagar í 17 ára (' + birthday17Str + ')</p>';
                         } else if (diffDays === 1) {
                             birthdayCountdown = '<p style="color: #667eea; font-weight: 600; margin-top: 8px;">🎂 1 dagur í 17 ára! (' + birthday17Str + ')</p>';
-                        } else {
-                            birthdayCountdown = '<p style="color: #667eea; font-weight: 600; margin-top: 8px;">🎂 17 ára afmæli í dag! 🎉</p>';
                         }
+                    } else if (today.getTime() === birthday17.getTime()) {
+                        // Það er nákvæmlega 17 ára afmælisdagurinn í dag!
+                        birthdayCountdown = '<p style="color: #ffd700; font-weight: 700; margin-top: 8px; font-size: 16px;">🎉 Innilega til hamingju með daginn! 🎉</p>';
+                    } else if (today > birthday17) {
+                        // Nemandi er orðinn 17 ára eða eldri (daginn eftir afmælið og áfram)
+                        birthdayCountdown = '<p style="color: #4caf50; font-weight: 600; margin-top: 8px;">✅ Uppfyllir aldursskilyrði fyrir bílpróf</p>';
                     }
                 }
                 
@@ -535,7 +541,7 @@
                         <button class="button button-secondary" onclick="editUserInfo()">✏️ Breyta upplýsingum</button>
                         <button class="button button-secondary" onclick="sendPDFReport()">📄 Senda PDF skýrslu</button>
                         <button class="button button-secondary" onclick="clearAllData()" style="background: #ff4444; color: white; border: none;">🗑️ Hreinsa öll gögn</button>
-                        <p style="text-align: center; color: #999; font-size: 11px; margin-top: 20px;">Útgáfa 1.3</p>
+                        <p style="text-align: center; color: #999; font-size: 11px; margin-top: 20px;">Útgáfa 1.5</p>
                     </div>
                     <div class="card">
                         <h2>Mínar æfingar (${data.sessions.length})</h2>
