@@ -274,11 +274,14 @@
             instructorEmail: '',
             instructors: [],
             sessions: [],
+            permanentCustomExercises: [], // Listi yfir allar sérsniðnar æfingar sem búnar hafa verið til
             page: 'login',
             // Fyrir nýja æfingu
             selectedCar: '',
             selectedRating: 0,
-            selectedExercises: []
+            selectedExercises: [],
+            customExercises: [],
+            selectedTime: ''
         };
 
         // Hlaða gögnum frá localStorage
@@ -293,6 +296,7 @@
                     data.instructorEmail = parsed.instructorEmail || '';
                     data.instructors = parsed.instructors || [];
                     data.sessions = parsed.sessions || [];
+                    data.permanentCustomExercises = parsed.permanentCustomExercises || [];
                     
                     // Ef notandi er skráður, fara beint á main
                     if (data.user) {
@@ -313,7 +317,8 @@
                     instructorName: data.instructorName,
                     instructorEmail: data.instructorEmail,
                     instructors: data.instructors,
-                    sessions: data.sessions
+                    sessions: data.sessions,
+                    permanentCustomExercises: data.permanentCustomExercises
                 };
                 localStorage.setItem('aefingaaksturData', JSON.stringify(toSave));
             } catch (e) {
@@ -356,6 +361,7 @@
                     <div class="card">
                         <h1>🚗 Æfingaakstur</h1>
                         <p class="subtitle">Skráðu þig til að byrja</p>
+                        <p style="text-align: center; color: #999; font-size: 12px; margin-bottom: 20px;">Útgáfa 1.0</p>
                         <div class="form-group">
                             <label>Nafn þitt (nemandi)</label>
                             <input type="text" id="userName" placeholder="Fullt nafn">
@@ -443,6 +449,7 @@
                             '<strong>📅 ' + dateStr + '</strong>' +
                             '<span style="color: #ffd700; font-size: 18px;">' + stars + '</span>' +
                             '</div>' +
+                            (s.time ? '<div style="color: #667eea; font-size: 14px; margin-top: 4px; font-weight: 600;">🕐 ' + s.time + '</div>' : '') +
                             '<div style="color: #666; margin-top: 4px;">🚗 ' + s.car + '</div>' +
                             '<div style="color: #666; margin-top: 4px;">👥 ' + s.instructor + '</div>' +
                             '<div style="color: #667eea; font-weight: 600; margin-top: 4px;">⏱️ ' + s.minutes + ' mínútur</div>' +
@@ -473,9 +480,12 @@
                         </div>
                         <button class="button" onclick="newSession()">➕ Ný æfing</button>
                         <button class="button button-secondary" onclick="showStatistics()">📊 Tölfræði</button>
-                        <button class="button button-secondary" onclick="manageInstructors()">Stjórna æfingaaðilum</button>
+                        <button class="button button-secondary" onclick="manageInstructors()">👥 Æfingaaðilar</button>
+                        <button class="button button-secondary" onclick="manageCustomExercises()" style="background: #4caf50; color: white; border: none;">📝 Sérsniðnar æfingar</button>
+                        <button class="button button-secondary" onclick="editUserInfo()">✏️ Breyta upplýsingum</button>
                         <button class="button button-secondary" onclick="sendPDFReport()">📄 Senda PDF skýrslu</button>
                         <button class="button button-secondary" onclick="clearAllData()" style="background: #ff4444; color: white; border: none;">🗑️ Hreinsa öll gögn</button>
+                        <p style="text-align: center; color: #999; font-size: 11px; margin-top: 20px;">Útgáfa 1.0</p>
                     </div>
                     <div class="card">
                         <h2>Mínar æfingar (${data.sessions.length})</h2>
@@ -498,6 +508,23 @@
                     exerciseList += '<div class="exercise-item ' + selected + '" onclick="toggleExercise(\'' + ex.replace(/'/g, "\\'") + '\')">' + ex + '</div>';
                 });
                 
+                // Bæta við permanent custom exercises í listann
+                data.permanentCustomExercises.forEach((ex, i) => {
+                    const selected = data.selectedExercises.includes(ex) ? 'selected' : '';
+                    exerciseList += '<div class="exercise-item ' + selected + '" onclick="toggleExercise(\'' + ex.replace(/'/g, "\\'") + '\')" style="background: #e8f5e9; border-color: #4caf50;">' +
+                        ex + ' <span style="color: #4caf50; font-size: 12px;">(sérsniðin)</span>' +
+                        '</div>';
+                });
+                
+                // Búa til custom exercise lista (í temp fyrir þessa æfingu)
+                let customExHTML = '';
+                data.customExercises.forEach((ex, i) => {
+                    customExHTML += '<div style="background: white; padding: 10px; border-radius: 6px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; border: 2px solid #667eea;">' +
+                        '<span>✓ ' + ex + '</span>' +
+                        '<button type="button" class="button button-delete" onclick="removeCustomEx(' + i + ')">✕</button>' +
+                        '</div>';
+                });
+                
                 app.innerHTML = `
                     <div class="card">
                         <h2>Ný æfing</h2>
@@ -505,6 +532,11 @@
                         <div class="form-group">
                             <label>Dagsetning</label>
                             <input type="date" id="sessionDate" value="${today}">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Klukkan</label>
+                            <input type="time" id="sessionTime" placeholder="00:00">
                         </div>
                         
                         <div class="form-group">
@@ -547,6 +579,15 @@
                             <div class="exercise-list">${exerciseList}</div>
                         </div>
                         
+                        <div class="form-group" style="margin-top: 20px;">
+                            <label>Annað (sérsniðnar æfingar)</label>
+                            <div style="background: #f0f2ff; padding: 15px; border-radius: 8px;">
+                                <input type="text" id="customExInput" placeholder="T.d. akstur á hraðbraut" style="margin-bottom: 10px;">
+                                <button type="button" class="button button-small" onclick="addCustomExercise()">➕ Bæta við</button>
+                                <div id="customExList">${customExHTML}</div>
+                            </div>
+                        </div>
+                        
                         <button class="button" onclick="saveSession()">Vista æfingu</button>
                         <button class="button button-secondary" onclick="cancelSession()">Hætta við</button>
                     </div>
@@ -557,13 +598,17 @@
                 // Reikna tölfræði fyrir hvern æfingaaðila
                 const stats = {};
                 
+                // Reikna tímadreifingu fyrir klukku
+                const timeDistribution = {};
+                
                 data.sessions.forEach(s => {
                     if (!stats[s.instructor]) {
                         stats[s.instructor] = {
                             count: 0,
                             minutes: 0,
                             ratings: [],
-                            exercises: {}
+                            exercises: {},
+                            times: []
                         };
                     }
                     
@@ -572,6 +617,13 @@
                     if (s.rating > 0) {
                         stats[s.instructor].ratings.push(s.rating);
                     }
+                    if (s.time) {
+                        stats[s.instructor].times.push(s.time);
+                        
+                        // Telja hversu oft hver klukkutími er notaður
+                        const hour = parseInt(s.time.split(':')[0]);
+                        timeDistribution[hour] = (timeDistribution[hour] || 0) + 1;
+                    }
                     
                     if (s.exercises) {
                         s.exercises.forEach(ex => {
@@ -579,6 +631,79 @@
                         });
                     }
                 });
+                
+                // Finna hæsta gildið fyrir lit scaling
+                const maxCount = Math.max(...Object.values(timeDistribution), 1);
+                
+                // Búa til klukku HTML
+                let clockHTML = '<div style="background: white; padding: 30px; border-radius: 16px; margin-bottom: 30px;">' +
+                    '<h3 style="color: #667eea; text-align: center; margin-bottom: 20px;">🕐 Sá tími sem oftast er æft á</h3>' +
+                    '<div style="position: relative; width: 300px; height: 300px; margin: 0 auto; border: 3px solid #667eea; border-radius: 50%;">';
+                
+                // Búa til 24 tíma á klukkuna
+                for (let hour = 0; hour < 24; hour++) {
+                    const angle = (hour * 15) - 90; // 15 gráður á milli hvers tíma, byrja efst
+                    const radian = (angle * Math.PI) / 180;
+                    const radius = 120;
+                    const x = 150 + radius * Math.cos(radian);
+                    const y = 150 + radius * Math.sin(radian);
+                    
+                    const count = timeDistribution[hour] || 0;
+                    const intensity = count > 0 ? (count / maxCount) : 0;
+                    
+                    // Reikna lit og stærð hrings
+                    let fontWeight = 'normal';
+                    let fontSize = '14px';
+                    let color = '#999';
+                    let bgColor = 'white';
+                    let borderColor = '#e0e0e0';
+                    let circleSize = '40px';
+                    
+                    if (count > 0) {
+                        if (intensity >= 0.7) {
+                            fontWeight = '900';
+                            fontSize = '18px';
+                            color = 'white';
+                            bgColor = '#667eea';
+                            borderColor = '#667eea';
+                            circleSize = '50px';
+                        } else if (intensity >= 0.4) {
+                            fontWeight = '700';
+                            fontSize = '16px';
+                            color = 'white';
+                            bgColor = '#8b9ef5';
+                            borderColor = '#8b9ef5';
+                            circleSize = '46px';
+                        } else if (intensity > 0) {
+                            fontWeight = '600';
+                            fontSize = '15px';
+                            color = '#667eea';
+                            bgColor = '#f0f2ff';
+                            borderColor = '#667eea';
+                            circleSize = '42px';
+                        }
+                    }
+                    
+                    const offset = parseInt(circleSize) / 2;
+                    
+                    clockHTML += '<div style="position: absolute; left: ' + (x - offset) + 'px; top: ' + (y - offset) + 'px; ' +
+                        'width: ' + circleSize + '; height: ' + circleSize + '; ' +
+                        'border-radius: 50%; background: ' + bgColor + '; ' +
+                        'border: 2px solid ' + borderColor + '; ' +
+                        'display: flex; align-items: center; justify-content: center; ' +
+                        'font-weight: ' + fontWeight + '; font-size: ' + fontSize + '; color: ' + color + ';">' +
+                        hour.toString().padStart(2, '0') +
+                        '</div>';
+                }
+                
+                clockHTML += '</div>' +
+                    '<div style="text-align: center; margin-top: 20px; color: #666; font-size: 14px;">' +
+                    '<div style="display: inline-flex; gap: 20px; align-items: center;">' +
+                    '<div><span style="display: inline-block; width: 20px; height: 20px; background: #667eea; border-radius: 50%; vertical-align: middle;"></span> Mest notað</div>' +
+                    '<div><span style="display: inline-block; width: 20px; height: 20px; background: #8b9ef5; border-radius: 50%; vertical-align: middle;"></span> Oft notað</div>' +
+                    '<div><span style="display: inline-block; width: 20px; height: 20px; background: #f0f2ff; border: 2px solid #667eea; border-radius: 50%; vertical-align: middle;"></span> Stundum notað</div>' +
+                    '</div></div>' +
+                    '</div>';
                 
                 let statsHTML = '';
                 
@@ -590,6 +715,17 @@
                         const avgRating = s.ratings.length > 0 
                             ? (s.ratings.reduce((a, b) => a + b, 0) / s.ratings.length).toFixed(1)
                             : 'Engin';
+                        
+                        // Finna mest notaða tímann
+                        let mostCommonTime = 'Ekki skráð';
+                        if (s.times.length > 0) {
+                            const timeCounts = {};
+                            s.times.forEach(t => {
+                                timeCounts[t] = (timeCounts[t] || 0) + 1;
+                            });
+                            const sorted = Object.entries(timeCounts).sort((a, b) => b[1] - a[1]);
+                            mostCommonTime = sorted[0][0] + ' (' + sorted[0][1] + 'x)';
+                        }
                         
                         let exerciseList = '';
                         const sortedExercises = Object.entries(s.exercises).sort((a, b) => b[1] - a[1]);
@@ -615,6 +751,10 @@
                             (s.ratings.length > 0 ? '★'.repeat(Math.round(parseFloat(avgRating))) + ' (' + avgRating + ')' : 'Engin einkunn') +
                             '</div>' +
                             '</div>' +
+                            '<div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center;">' +
+                            '<div style="color: #666; font-size: 14px; margin-bottom: 5px;">🕐 Oftast æft á tíma</div>' +
+                            '<div style="font-size: 24px; font-weight: 700; color: #667eea;">' + mostCommonTime + '</div>' +
+                            '</div>' +
                             (exerciseList ? '<div><strong style="color: #333;">Mest æfðar æfingar:</strong><div style="margin-top: 8px;">' + exerciseList + '</div></div>' : '') +
                             '</div>';
                     });
@@ -624,8 +764,71 @@
                     <div class="card">
                         <h2>📊 Tölfræði</h2>
                         <p class="subtitle">Yfirlit eftir æfingaaðilum</p>
+                        ${clockHTML}
                         ${statsHTML}
                         <button class="button button-secondary" onclick="backToMain()" style="margin-top: 20px;">← Til baka</button>
+                    </div>
+                `;
+            }
+            
+            else if (data.page === 'manageCustomExercises') {
+                let customList = '';
+                if (data.permanentCustomExercises.length === 0) {
+                    customList = '<p class="empty">Engar sérsniðnar æfingar ennþá</p>';
+                } else {
+                    data.permanentCustomExercises.forEach((ex, i) => {
+                        customList += '<div class="item">' +
+                            '<span>📝 ' + ex + '</span>' +
+                            '<button class="button button-delete delete-custom-perm-btn" data-idx="' + i + '">Eyða</button>' +
+                            '</div>';
+                    });
+                }
+                
+                app.innerHTML = `
+                    <div class="card">
+                        <h2>📝 Stjórna sérsniðnum æfingum</h2>
+                        <p class="subtitle">Þessar æfingar birtast í listanum þegar þú skráir æfingu</p>
+                        ${customList}
+                        <button class="button button-secondary" onclick="backToMain()" style="margin-top: 20px;">← Til baka</button>
+                    </div>
+                `;
+                
+                // Bæta við event listeners fyrir delete takka
+                setTimeout(() => {
+                    document.querySelectorAll('.delete-custom-perm-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const idx = parseInt(this.getAttribute('data-idx'));
+                            deletePermanentCustomExercise(idx);
+                        });
+                    });
+                }, 0);
+            }
+            
+            else if (data.page === 'editUserInfo') {
+                app.innerHTML = `
+                    <div class="card">
+                        <h2>✏️ Breyta upplýsingum</h2>
+                        <p class="subtitle">Uppfærðu þínar upplýsingar</p>
+                        
+                        <div class="form-group">
+                            <label>Nafn þitt (nemandi)</label>
+                            <input type="text" id="editUserName" value="${data.user}" placeholder="Fullt nafn">
+                        </div>
+                        <div class="form-group">
+                            <label>Kennitala</label>
+                            <input type="text" id="editUserSSN" value="${data.userSSN}" placeholder="000000-0000" maxlength="11">
+                        </div>
+                        <div class="form-group">
+                            <label>Nafn ökukennara</label>
+                            <input type="text" id="editInstructorName" value="${data.instructorName}" placeholder="Nafn ökukennara">
+                        </div>
+                        <div class="form-group">
+                            <label>Netfang ökukennara</label>
+                            <input type="text" id="editInstructorEmail" value="${data.instructorEmail}" placeholder="okukennari@example.is">
+                        </div>
+                        
+                        <button class="button" onclick="saveUserInfo()">💾 Vista breytingar</button>
+                        <button class="button button-secondary" onclick="backToMain()" style="margin-top: 10px;">← Til baka</button>
                     </div>
                 `;
             }
@@ -696,6 +899,8 @@
             data.selectedCar = '';
             data.selectedRating = 0;
             data.selectedExercises = [];
+            data.customExercises = [];
+            data.selectedTime = '';
             data.page = 'newSession';
             render();
         }
@@ -704,6 +909,9 @@
             // Vista gildi
             if (document.getElementById('sessionDate')) {
                 data.tempDate = document.getElementById('sessionDate').value;
+            }
+            if (document.getElementById('sessionTime')) {
+                data.tempTime = document.getElementById('sessionTime').value;
             }
             if (document.getElementById('sessionMinutes')) {
                 data.tempMinutes = document.getElementById('sessionMinutes').value;
@@ -720,6 +928,9 @@
                 if (data.tempDate && document.getElementById('sessionDate')) {
                     document.getElementById('sessionDate').value = data.tempDate;
                 }
+                if (data.tempTime && document.getElementById('sessionTime')) {
+                    document.getElementById('sessionTime').value = data.tempTime;
+                }
                 if (data.tempMinutes && document.getElementById('sessionMinutes')) {
                     document.getElementById('sessionMinutes').value = data.tempMinutes;
                 }
@@ -733,6 +944,9 @@
             // Vista gildi
             if (document.getElementById('sessionDate')) {
                 data.tempDate = document.getElementById('sessionDate').value;
+            }
+            if (document.getElementById('sessionTime')) {
+                data.tempTime = document.getElementById('sessionTime').value;
             }
             if (document.getElementById('sessionMinutes')) {
                 data.tempMinutes = document.getElementById('sessionMinutes').value;
@@ -749,6 +963,9 @@
                 if (data.tempDate && document.getElementById('sessionDate')) {
                     document.getElementById('sessionDate').value = data.tempDate;
                 }
+                if (data.tempTime && document.getElementById('sessionTime')) {
+                    document.getElementById('sessionTime').value = data.tempTime;
+                }
                 if (data.tempMinutes && document.getElementById('sessionMinutes')) {
                     document.getElementById('sessionMinutes').value = data.tempMinutes;
                 }
@@ -762,6 +979,9 @@
             // Vista gildi úr formi áður en við renderum aftur
             if (document.getElementById('sessionDate')) {
                 data.tempDate = document.getElementById('sessionDate').value;
+            }
+            if (document.getElementById('sessionTime')) {
+                data.tempTime = document.getElementById('sessionTime').value;
             }
             if (document.getElementById('sessionMinutes')) {
                 data.tempMinutes = document.getElementById('sessionMinutes').value;
@@ -783,6 +1003,106 @@
                 if (data.tempDate && document.getElementById('sessionDate')) {
                     document.getElementById('sessionDate').value = data.tempDate;
                 }
+                if (data.tempTime && document.getElementById('sessionTime')) {
+                    document.getElementById('sessionTime').value = data.tempTime;
+                }
+                if (data.tempMinutes && document.getElementById('sessionMinutes')) {
+                    document.getElementById('sessionMinutes').value = data.tempMinutes;
+                }
+                if (data.tempInstructor && document.getElementById('sessionInstructor')) {
+                    document.getElementById('sessionInstructor').value = data.tempInstructor;
+                }
+            }, 0);
+        }
+
+        function addCustomExercise() {
+            const input = document.getElementById('customExInput');
+            const text = input ? input.value.trim() : '';
+            
+            if (!text) {
+                alert('Vinsamlegast skrifaðu eitthvað');
+                return;
+            }
+            
+            // Athuga hvort æfingin er nú þegar til (í venjulegum listanum, permanent lista eða temp lista)
+            if (exercises.includes(text)) {
+                alert('Þessi æfing er nú þegar í listanum');
+                return;
+            }
+            
+            if (data.permanentCustomExercises.includes(text)) {
+                alert('Þessi sérsniðna æfing er nú þegar í listanum');
+                return;
+            }
+            
+            if (data.customExercises.includes(text)) {
+                alert('Þessi æfing er nú þegar bætt við');
+                return;
+            }
+            
+            // Vista gildi
+            if (document.getElementById('sessionDate')) {
+                data.tempDate = document.getElementById('sessionDate').value;
+            }
+            if (document.getElementById('sessionTime')) {
+                data.tempTime = document.getElementById('sessionTime').value;
+            }
+            if (document.getElementById('sessionMinutes')) {
+                data.tempMinutes = document.getElementById('sessionMinutes').value;
+            }
+            if (document.getElementById('sessionInstructor')) {
+                data.tempInstructor = document.getElementById('sessionInstructor').value;
+            }
+            
+            // Bæta við permanent lista (svo hún birtist í framtíðinni)
+            data.permanentCustomExercises.push(text);
+            // Bæta líka við temp lista fyrir þessa æfingu
+            data.customExercises.push(text);
+            render();
+            
+            // Endurheimta gildi
+            setTimeout(() => {
+                if (data.tempDate && document.getElementById('sessionDate')) {
+                    document.getElementById('sessionDate').value = data.tempDate;
+                }
+                if (data.tempTime && document.getElementById('sessionTime')) {
+                    document.getElementById('sessionTime').value = data.tempTime;
+                }
+                if (data.tempMinutes && document.getElementById('sessionMinutes')) {
+                    document.getElementById('sessionMinutes').value = data.tempMinutes;
+                }
+                if (data.tempInstructor && document.getElementById('sessionInstructor')) {
+                    document.getElementById('sessionInstructor').value = data.tempInstructor;
+                }
+            }, 0);
+        }
+
+        function removeCustomEx(index) {
+            // Vista gildi
+            if (document.getElementById('sessionDate')) {
+                data.tempDate = document.getElementById('sessionDate').value;
+            }
+            if (document.getElementById('sessionTime')) {
+                data.tempTime = document.getElementById('sessionTime').value;
+            }
+            if (document.getElementById('sessionMinutes')) {
+                data.tempMinutes = document.getElementById('sessionMinutes').value;
+            }
+            if (document.getElementById('sessionInstructor')) {
+                data.tempInstructor = document.getElementById('sessionInstructor').value;
+            }
+            
+            data.customExercises.splice(index, 1);
+            render();
+            
+            // Endurheimta gildi
+            setTimeout(() => {
+                if (data.tempDate && document.getElementById('sessionDate')) {
+                    document.getElementById('sessionDate').value = data.tempDate;
+                }
+                if (data.tempTime && document.getElementById('sessionTime')) {
+                    document.getElementById('sessionTime').value = data.tempTime;
+                }
                 if (data.tempMinutes && document.getElementById('sessionMinutes')) {
                     document.getElementById('sessionMinutes').value = data.tempMinutes;
                 }
@@ -794,11 +1114,16 @@
 
         function saveSession() {
             const date = document.getElementById('sessionDate').value;
+            const time = document.getElementById('sessionTime').value;
             const minutes = parseInt(document.getElementById('sessionMinutes').value);
             const instructor = document.getElementById('sessionInstructor').value;
             
             if (!date) {
                 alert('Veldu dagsetningu');
+                return;
+            }
+            if (!time) {
+                alert('Veldu tíma');
                 return;
             }
             if (!instructor) {
@@ -814,14 +1139,18 @@
                 return;
             }
             
+            // Sameina venjulegar æfingar og sérsniðnar æfingar
+            const allExercises = [...data.selectedExercises, ...data.customExercises];
+            
             data.sessions.unshift({
                 id: Date.now(),
                 date: date,
+                time: time,
                 minutes: minutes,
                 instructor: instructor,
                 car: data.selectedCar,
                 rating: data.selectedRating,
-                exercises: [...data.selectedExercises]
+                exercises: allExercises
             });
             
             data.page = 'main';
@@ -834,7 +1163,21 @@
             
             data.selectedCar = session.car;
             data.selectedRating = session.rating;
-            data.selectedExercises = [...session.exercises];
+            data.selectedExercises = [];
+            data.customExercises = [];
+            
+            // Aðskilja venjulegar æfingar og sérsniðnar
+            if (session.exercises) {
+                session.exercises.forEach(ex => {
+                    // Ef það er í grunnlista eða í permanent custom lista
+                    if (exercises.includes(ex) || data.permanentCustomExercises.includes(ex)) {
+                        data.selectedExercises.push(ex);
+                    } else {
+                        // Annars bæta við temp lista (gömul sérsniðin æfing sem var ekki vistuð)
+                        data.customExercises.push(ex);
+                    }
+                });
+            }
             
             data.sessions = data.sessions.filter(s => s.id !== id);
             data.page = 'newSession';
@@ -842,6 +1185,9 @@
             
             setTimeout(() => {
                 document.getElementById('sessionDate').value = session.date;
+                if (session.time) {
+                    document.getElementById('sessionTime').value = session.time;
+                }
                 document.getElementById('sessionMinutes').value = session.minutes;
                 document.getElementById('sessionInstructor').value = session.instructor;
             }, 10);
@@ -862,21 +1208,172 @@
             render();
         }
 
-        function clearAllData() {
-            if (confirm('VIÐVÖRUN: Þetta mun eyða ÖLLUM gögnum þínum!\n\nErtu alveg viss?')) {
-                if (confirm('Ertu ALVEG ALVEG viss? Þetta er ekki hægt að afturkalla!')) {
-                    localStorage.removeItem('aefingaaksturData');
-                    data.user = '';
-                    data.userSSN = '';
-                    data.instructorName = '';
-                    data.instructorEmail = '';
-                    data.instructors = [];
-                    data.sessions = [];
-                    data.page = 'login';
-                    render();
-                    alert('Öll gögn hafa verið hreinsuð');
-                }
+        function manageCustomExercises() {
+            data.page = 'manageCustomExercises';
+            render();
+        }
+
+        function editUserInfo() {
+            data.page = 'editUserInfo';
+            render();
+        }
+
+        function saveUserInfo() {
+            const name = document.getElementById('editUserName').value.trim();
+            const ssn = document.getElementById('editUserSSN').value.trim();
+            const instrName = document.getElementById('editInstructorName').value.trim();
+            const instrEmail = document.getElementById('editInstructorEmail').value.trim();
+            
+            if (!name) {
+                alert('Vinsamlegast sláðu inn nafn');
+                return;
             }
+            if (!ssn) {
+                alert('Vinsamlegast sláðu inn kennitölu');
+                return;
+            }
+            if (!instrName) {
+                alert('Vinsamlegast sláðu inn nafn ökukennara');
+                return;
+            }
+            if (!instrEmail) {
+                alert('Vinsamlegast sláðu inn netfang ökukennara');
+                return;
+            }
+            
+            data.user = name;
+            data.userSSN = ssn;
+            data.instructorName = instrName;
+            data.instructorEmail = instrEmail;
+            
+            // Sýna staðfestingarglugga
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;';
+            
+            const dialog = document.createElement('div');
+            dialog.style.cssText = 'background: white; padding: 30px; border-radius: 16px; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center;';
+            dialog.innerHTML = '<h3 style="color: #4caf50; margin-bottom: 15px;">✓ Upplýsingar vistaðar</h3>' +
+                '<p style="color: #666; margin-bottom: 20px;">Þínar upplýsingar hafa verið uppfærðar</p>' +
+                '<button id="successOk" style="padding: 12px 30px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">Í lagi</button>';
+            
+            overlay.appendChild(dialog);
+            document.body.appendChild(overlay);
+            
+            document.getElementById('successOk').onclick = function() {
+                document.body.removeChild(overlay);
+                data.page = 'main';
+                render();
+            };
+            
+            overlay.onclick = function(e) {
+                if (e.target === overlay) {
+                    document.body.removeChild(overlay);
+                    data.page = 'main';
+                    render();
+                }
+            };
+        }
+
+        function deletePermanentCustomExercise(index) {
+            const ex = data.permanentCustomExercises[index];
+            
+            // Búa til sérsniðinn staðfestingarglugga
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;';
+            
+            const dialog = document.createElement('div');
+            dialog.style.cssText = 'background: white; padding: 30px; border-radius: 16px; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);';
+            dialog.innerHTML = '<h3 style="color: #667eea; margin-bottom: 15px;">Staðfesta eyðingu</h3>' +
+                '<p style="color: #666; margin-bottom: 20px;">Ertu viss um að þú viljir eyða "' + ex + '"?</p>' +
+                '<div style="display: flex; gap: 10px;">' +
+                '<button id="confirmYes" style="flex: 1; padding: 12px; background: #ff4444; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">Eyða</button>' +
+                '<button id="confirmNo" style="flex: 1; padding: 12px; background: #e0e0e0; color: #333; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">Hætta við</button>' +
+                '</div>';
+            
+            overlay.appendChild(dialog);
+            document.body.appendChild(overlay);
+            
+            document.getElementById('confirmYes').onclick = function() {
+                data.permanentCustomExercises.splice(index, 1);
+                document.body.removeChild(overlay);
+                render();
+            };
+            
+            document.getElementById('confirmNo').onclick = function() {
+                document.body.removeChild(overlay);
+            };
+            
+            overlay.onclick = function(e) {
+                if (e.target === overlay) {
+                    document.body.removeChild(overlay);
+                }
+            };
+        }
+
+        function clearAllData() {
+            // Búa til sérsniðinn staðfestingarglugga
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;';
+            
+            const dialog = document.createElement('div');
+            dialog.style.cssText = 'background: white; padding: 30px; border-radius: 16px; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);';
+            dialog.innerHTML = '<h3 style="color: #ff4444; margin-bottom: 15px;">⚠️ VIÐVÖRUN</h3>' +
+                '<p style="color: #666; margin-bottom: 20px; font-weight: 600;">Þetta mun eyða ÖLLUM gögnum þínum!</p>' +
+                '<p style="color: #666; margin-bottom: 20px;">Allar æfingar, æfingaaðilar og sérsniðnar æfingar verða varanlega eytt.</p>' +
+                '<p style="color: #ff4444; margin-bottom: 20px; font-weight: 600;">Ertu ALVEG viss?</p>' +
+                '<div style="display: flex; gap: 10px;">' +
+                '<button id="clearYes" style="flex: 1; padding: 12px; background: #ff4444; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">Já, eyða öllu</button>' +
+                '<button id="clearNo" style="flex: 1; padding: 12px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">Nei, hætta við</button>' +
+                '</div>';
+            
+            overlay.appendChild(dialog);
+            document.body.appendChild(overlay);
+            
+            document.getElementById('clearYes').onclick = function() {
+                localStorage.removeItem('aefingaaksturData');
+                data.user = '';
+                data.userSSN = '';
+                data.instructorName = '';
+                data.instructorEmail = '';
+                data.instructors = [];
+                data.sessions = [];
+                data.permanentCustomExercises = [];
+                data.page = 'login';
+                document.body.removeChild(overlay);
+                render();
+                
+                // Sýna staðfestingarglugga
+                const successOverlay = document.createElement('div');
+                successOverlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;';
+                
+                const successDialog = document.createElement('div');
+                successDialog.style.cssText = 'background: white; padding: 30px; border-radius: 16px; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center;';
+                successDialog.innerHTML = '<h3 style="color: #4caf50; margin-bottom: 15px;">✓ Öll gögn hafa verið hreinsuð</h3>' +
+                    '<button id="successOk" style="padding: 12px 30px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px;">Í lagi</button>';
+                
+                successOverlay.appendChild(successDialog);
+                document.body.appendChild(successOverlay);
+                
+                document.getElementById('successOk').onclick = function() {
+                    document.body.removeChild(successOverlay);
+                };
+                
+                successOverlay.onclick = function(e) {
+                    if (e.target === successOverlay) {
+                        document.body.removeChild(successOverlay);
+                    }
+                };
+            };
+            
+            document.getElementById('clearNo').onclick = function() {
+                document.body.removeChild(overlay);
+            };
+            
+            overlay.onclick = function(e) {
+                if (e.target === overlay) {
+                    document.body.removeChild(overlay);
+                }
+            };
         }
 
         function sendPDFReport() {
@@ -909,6 +1406,9 @@
                 const dateStr = date.toLocaleDateString('is-IS');
                 
                 report += (i + 1) + '. ' + dateStr + '\n';
+                if (s.time) {
+                    report += '   Klukkan: ' + s.time + '\n';
+                }
                 report += '   Æfingaaðili: ' + s.instructor + '\n';
                 report += '   Bíll: ' + s.car + '\n';
                 report += '   Tími: ' + s.minutes + ' mínútur\n';
