@@ -362,7 +362,7 @@
                     <div class="card">
                         <h1>🚗 Æfingaakstur</h1>
                         <p class="subtitle">Skráðu þig til að byrja</p>
-                        <p style="text-align: center; color: #999; font-size: 12px; margin-bottom: 20px;">Útgáfa 1.2</p>
+                        <p style="text-align: center; color: #999; font-size: 12px; margin-bottom: 20px;">Útgáfa 1.3</p>
                         <div class="form-group">
                             <label>Nafn þitt (nemandi)</label>
                             <input type="text" id="userName" placeholder="Fullt nafn">
@@ -429,6 +429,42 @@
                 const uniqueDates = new Set(data.sessions.map(s => s.date));
                 const totalDays = uniqueDates.size;
                 
+                // Reikna út 17 ára afmæli
+                let birthdayCountdown = '';
+                if (data.userSSN && data.userSSN.length >= 6) {
+                    const day = parseInt(data.userSSN.substring(0, 2));
+                    const month = parseInt(data.userSSN.substring(2, 4));
+                    let year = parseInt(data.userSSN.substring(4, 6));
+                    
+                    // Ákvarða aldargetu (19xx eða 20xx)
+                    const century = year >= 0 && year <= 30 ? 2000 : 1900;
+                    year = century + year;
+                    
+                    const birthDate = new Date(year, month - 1, day);
+                    const birthday17 = new Date(year + 17, month - 1, day);
+                    const today = new Date();
+                    
+                    // Ef nemandi er ekki enn orðinn 17 ára
+                    if (today < birthday17) {
+                        const diffTime = birthday17 - today;
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        const diffMonths = Math.floor(diffDays / 30);
+                        const remainingDays = diffDays % 30;
+                        
+                        const birthday17Str = birthday17.toLocaleDateString('is-IS', { year: 'numeric', month: 'long', day: 'numeric' });
+                        
+                        if (diffDays > 30) {
+                            birthdayCountdown = '<p style="color: #667eea; font-weight: 600; margin-top: 8px;">🎂 ' + diffMonths + ' mánuðir og ' + remainingDays + ' dagar í 17 ára (' + birthday17Str + ')</p>';
+                        } else if (diffDays > 1) {
+                            birthdayCountdown = '<p style="color: #667eea; font-weight: 600; margin-top: 8px;">🎂 ' + diffDays + ' dagar í 17 ára (' + birthday17Str + ')</p>';
+                        } else if (diffDays === 1) {
+                            birthdayCountdown = '<p style="color: #667eea; font-weight: 600; margin-top: 8px;">🎂 1 dagur í 17 ára! (' + birthday17Str + ')</p>';
+                        } else {
+                            birthdayCountdown = '<p style="color: #667eea; font-weight: 600; margin-top: 8px;">🎂 17 ára afmæli í dag! 🎉</p>';
+                        }
+                    }
+                }
+                
                 let sessionList = '';
                 if (data.sessions.length === 0) {
                     sessionList = '<p class="empty">Engar æfingar skráðar</p>';
@@ -476,6 +512,7 @@
                     <div class="card">
                         <div class="welcome-box">
                             <p><strong>👤 Nemandi:</strong> ${data.user}</p>
+                            ${birthdayCountdown}
                             <p><strong>👥 Æfingaaðilar:</strong> ${data.instructors.length}</p>
                         </div>
                         <div class="time-box">
@@ -498,7 +535,7 @@
                         <button class="button button-secondary" onclick="editUserInfo()">✏️ Breyta upplýsingum</button>
                         <button class="button button-secondary" onclick="sendPDFReport()">📄 Senda PDF skýrslu</button>
                         <button class="button button-secondary" onclick="clearAllData()" style="background: #ff4444; color: white; border: none;">🗑️ Hreinsa öll gögn</button>
-                        <p style="text-align: center; color: #999; font-size: 11px; margin-top: 20px;">Útgáfa 1.2</p>
+                        <p style="text-align: center; color: #999; font-size: 11px; margin-top: 20px;">Útgáfa 1.3</p>
                     </div>
                     <div class="card">
                         <h2>Mínar æfingar (${data.sessions.length})</h2>
