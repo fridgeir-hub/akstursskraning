@@ -276,6 +276,7 @@
             sessions: [],
             permanentCustomExercises: [], // Listi yfir allar sérsniðnar æfingar sem búnar hafa verið til
             page: 'login',
+            showAllSessions: false, // Sýna allar æfingar eða bara 2 nýjustu
             // Fyrir nýja æfingu
             selectedCar: '',
             selectedRating: 0,
@@ -361,7 +362,7 @@
                     <div class="card">
                         <h1>🚗 Æfingaakstur</h1>
                         <p class="subtitle">Skráðu þig til að byrja</p>
-                        <p style="text-align: center; color: #999; font-size: 12px; margin-bottom: 20px;">Útgáfa 1.0</p>
+                        <p style="text-align: center; color: #999; font-size: 12px; margin-bottom: 20px;">Útgáfa 1.2</p>
                         <div class="form-group">
                             <label>Nafn þitt (nemandi)</label>
                             <input type="text" id="userName" placeholder="Fullt nafn">
@@ -432,7 +433,10 @@
                 if (data.sessions.length === 0) {
                     sessionList = '<p class="empty">Engar æfingar skráðar</p>';
                 } else {
-                    data.sessions.forEach(s => {
+                    // Ákveða hversu margar æfingar á að sýna
+                    const sessionsToShow = data.showAllSessions ? data.sessions : data.sessions.slice(0, 2);
+                    
+                    sessionsToShow.forEach(s => {
                         const date = new Date(s.date + 'T00:00:00');
                         const dateStr = date.toLocaleDateString('is-IS', { year: 'numeric', month: 'long', day: 'numeric' });
                         const stars = s.rating > 0 ? '★'.repeat(s.rating) : '';
@@ -457,6 +461,15 @@
                             '<button class="button button-secondary" onclick="editSession(' + s.id + ')" style="margin-top: 10px;">✏️ Breyta</button>' +
                             '</div>';
                     });
+                    
+                    // Bæta við "Sjá allar" hnapp ef það eru fleiri en 2 æfingar
+                    if (data.sessions.length > 2) {
+                        if (data.showAllSessions) {
+                            sessionList += '<button class="button button-secondary" onclick="toggleShowAllSessions()" style="margin-top: 10px;">👆 Sjá færri</button>';
+                        } else {
+                            sessionList += '<button class="button button-secondary" onclick="toggleShowAllSessions()" style="margin-top: 10px;">👇 Sjá allar æfingar (' + data.sessions.length + ')</button>';
+                        }
+                    }
                 }
                 
                 app.innerHTML = `
@@ -485,7 +498,7 @@
                         <button class="button button-secondary" onclick="editUserInfo()">✏️ Breyta upplýsingum</button>
                         <button class="button button-secondary" onclick="sendPDFReport()">📄 Senda PDF skýrslu</button>
                         <button class="button button-secondary" onclick="clearAllData()" style="background: #ff4444; color: white; border: none;">🗑️ Hreinsa öll gögn</button>
-                        <p style="text-align: center; color: #999; font-size: 11px; margin-top: 20px;">Útgáfa 1.0</p>
+                        <p style="text-align: center; color: #999; font-size: 11px; margin-top: 20px;">Útgáfa 1.2</p>
                     </div>
                     <div class="card">
                         <h2>Mínar æfingar (${data.sessions.length})</h2>
@@ -636,51 +649,51 @@
                 const maxCount = Math.max(...Object.values(timeDistribution), 1);
                 
                 // Búa til klukku HTML
-                let clockHTML = '<div style="background: white; padding: 30px; border-radius: 16px; margin-bottom: 30px;">' +
-                    '<h3 style="color: #667eea; text-align: center; margin-bottom: 20px;">🕐 Sá tími sem oftast er æft á</h3>' +
-                    '<div style="position: relative; width: 300px; height: 300px; margin: 0 auto; border: 3px solid #667eea; border-radius: 50%;">';
+                let clockHTML = '<div style="background: white; padding: 20px; border-radius: 16px; margin-bottom: 30px;">' +
+                    '<h3 style="color: #667eea; text-align: center; margin-bottom: 15px; font-size: 18px;">🕐 Sá tími sem oftast er æft á</h3>' +
+                    '<div style="position: relative; width: 250px; height: 250px; margin: 0 auto; border: 3px solid #667eea; border-radius: 50%;">';
                 
                 // Búa til 24 tíma á klukkuna
                 for (let hour = 0; hour < 24; hour++) {
                     const angle = (hour * 15) - 90; // 15 gráður á milli hvers tíma, byrja efst
                     const radian = (angle * Math.PI) / 180;
-                    const radius = 120;
-                    const x = 150 + radius * Math.cos(radian);
-                    const y = 150 + radius * Math.sin(radian);
+                    const radius = 100;
+                    const x = 125 + radius * Math.cos(radian);
+                    const y = 125 + radius * Math.sin(radian);
                     
                     const count = timeDistribution[hour] || 0;
                     const intensity = count > 0 ? (count / maxCount) : 0;
                     
                     // Reikna lit og stærð hrings
                     let fontWeight = 'normal';
-                    let fontSize = '14px';
+                    let fontSize = '12px';
                     let color = '#999';
                     let bgColor = 'white';
                     let borderColor = '#e0e0e0';
-                    let circleSize = '40px';
+                    let circleSize = '32px';
                     
                     if (count > 0) {
                         if (intensity >= 0.7) {
                             fontWeight = '900';
-                            fontSize = '18px';
+                            fontSize = '15px';
                             color = 'white';
                             bgColor = '#667eea';
                             borderColor = '#667eea';
-                            circleSize = '50px';
+                            circleSize = '40px';
                         } else if (intensity >= 0.4) {
                             fontWeight = '700';
-                            fontSize = '16px';
+                            fontSize = '14px';
                             color = 'white';
                             bgColor = '#8b9ef5';
                             borderColor = '#8b9ef5';
-                            circleSize = '46px';
+                            circleSize = '37px';
                         } else if (intensity > 0) {
                             fontWeight = '600';
-                            fontSize = '15px';
+                            fontSize = '13px';
                             color = '#667eea';
                             bgColor = '#f0f2ff';
                             borderColor = '#667eea';
-                            circleSize = '42px';
+                            circleSize = '34px';
                         }
                     }
                     
@@ -697,11 +710,11 @@
                 }
                 
                 clockHTML += '</div>' +
-                    '<div style="text-align: center; margin-top: 20px; color: #666; font-size: 14px;">' +
-                    '<div style="display: inline-flex; gap: 20px; align-items: center;">' +
-                    '<div><span style="display: inline-block; width: 20px; height: 20px; background: #667eea; border-radius: 50%; vertical-align: middle;"></span> Mest notað</div>' +
-                    '<div><span style="display: inline-block; width: 20px; height: 20px; background: #8b9ef5; border-radius: 50%; vertical-align: middle;"></span> Oft notað</div>' +
-                    '<div><span style="display: inline-block; width: 20px; height: 20px; background: #f0f2ff; border: 2px solid #667eea; border-radius: 50%; vertical-align: middle;"></span> Stundum notað</div>' +
+                    '<div style="text-align: center; margin-top: 15px; color: #666; font-size: 12px;">' +
+                    '<div style="display: inline-flex; gap: 15px; align-items: center; flex-wrap: wrap; justify-content: center;">' +
+                    '<div><span style="display: inline-block; width: 18px; height: 18px; background: #667eea; border-radius: 50%; vertical-align: middle;"></span> Mest notað</div>' +
+                    '<div><span style="display: inline-block; width: 18px; height: 18px; background: #8b9ef5; border-radius: 50%; vertical-align: middle;"></span> Oft notað</div>' +
+                    '<div><span style="display: inline-block; width: 18px; height: 18px; background: #f0f2ff; border: 2px solid #667eea; border-radius: 50%; vertical-align: middle;"></span> Stundum notað</div>' +
                     '</div></div>' +
                     '</div>';
                 
@@ -902,6 +915,11 @@
             data.customExercises = [];
             data.selectedTime = '';
             data.page = 'newSession';
+            render();
+        }
+
+        function toggleShowAllSessions() {
+            data.showAllSessions = !data.showAllSessions;
             render();
         }
 
