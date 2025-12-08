@@ -1645,17 +1645,21 @@
         loadData();
         render();
         
-        // Register service worker for PWA
+        // Register service worker for PWA (only on production GitHub Pages)
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/akstursskraning/service-worker.js')
-                    .then(registration => {
-                        console.log('Service Worker skráður:', registration);
-                    })
-                    .catch(error => {
-                        console.log('Service Worker villa:', error);
-                    });
-            });
+            const isProduction = window.location.hostname === 'fridgeir-hub.github.io';
+            
+            if (isProduction) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/akstursskraning/service-worker.js')
+                        .then(registration => {
+                            console.log('✅ Service Worker skráður:', registration);
+                        })
+                        .catch(error => {
+                            console.log('⚠️ Service Worker villa:', error);
+                        });
+                });
+            }
         }
     </script>
 </body>
