@@ -136,6 +136,61 @@
             border-left: 4px solid #667eea;
         }
 
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 8px 0;
+            z-index: 1000;
+            padding-bottom: max(8px, env(safe-area-inset-bottom));
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 5px 15px;
+            cursor: pointer;
+            color: #999;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-radius: 8px;
+            min-width: 60px;
+        }
+
+        .nav-item:active {
+            background: #f0f2ff;
+        }
+
+        .nav-item.active {
+            color: #667eea;
+        }
+
+        .nav-item .icon {
+            font-size: 24px;
+            margin-bottom: 3px;
+        }
+
+        .nav-item .label {
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Add padding for bottom nav */
+        body {
+            padding-bottom: 80px;
+        }
+
+        .container {
+            margin-bottom: 20px;
+        }
+
         .empty {
             text-align: center;
             color: #999;
@@ -264,6 +319,7 @@
 </head>
 <body>
     <div class="container" id="app"></div>
+    <div id="bottom-nav-container"></div>
 
     <script>
         // Data
@@ -277,6 +333,7 @@
             permanentCustomExercises: [], // Listi yfir allar sérsniðnar æfingar sem búnar hafa verið til
             page: 'login',
             showAllSessions: false, // Sýna allar æfingar eða bara 2 nýjustu
+            currentNavPage: 'home', // Fyrir bottom navigation
             // Fyrir nýja æfingu
             selectedCar: '',
             selectedRating: 0,
@@ -356,13 +413,14 @@
         function render() {
             saveData(); // Vista gögn í hvert skipti sem við renderum
             const app = document.getElementById('app');
+            const bottomNavContainer = document.getElementById('bottom-nav-container');
             
             if (data.page === 'login') {
                 app.innerHTML = `
                     <div class="card">
                         <h1>🚗 Æfingaakstur</h1>
                         <p class="subtitle">Skráðu þig til að byrja</p>
-                        <p style="text-align: center; color: #999; font-size: 12px; margin-bottom: 20px;">Útgáfa 1.5</p>
+                        <p style="text-align: center; color: #999; font-size: 12px; margin-bottom: 20px;">Útgáfa 1.6</p>
                         <div class="form-group">
                             <label>Nafn þitt (nemandi)</label>
                             <input type="text" id="userName" placeholder="Fullt nafn">
@@ -534,14 +592,6 @@
                                 </div>
                             </div>
                         </div>
-                        <button class="button" onclick="newSession()">➕ Ný æfing</button>
-                        <button class="button button-secondary" onclick="showStatistics()">📊 Tölfræði</button>
-                        <button class="button button-secondary" onclick="manageInstructors()">👥 Æfingaaðilar</button>
-                        <button class="button button-secondary" onclick="manageCustomExercises()" style="background: #4caf50; color: white; border: none;">📝 Sérsniðnar æfingar</button>
-                        <button class="button button-secondary" onclick="editUserInfo()">✏️ Breyta upplýsingum</button>
-                        <button class="button button-secondary" onclick="sendPDFReport()">📄 Senda PDF skýrslu</button>
-                        <button class="button button-secondary" onclick="clearAllData()" style="background: #ff4444; color: white; border: none;">🗑️ Hreinsa öll gögn</button>
-                        <p style="text-align: center; color: #999; font-size: 11px; margin-top: 20px;">Útgáfa 1.5</p>
                     </div>
                     <div class="card">
                         <h2>Mínar æfingar (${data.sessions.length})</h2>
@@ -888,6 +938,27 @@
                     </div>
                 `;
             }
+            
+            else if (data.page === 'settings') {
+                data.currentNavPage = 'settings';
+                app.innerHTML = `
+                    <div class="card">
+                        <h2>⚙️ Stillingar</h2>
+                        <p class="subtitle">Stjórnaðu appinu þínu</p>
+                        
+                        <button class="button button-secondary" onclick="manageInstructors()" style="margin-top: 10px;">👥 Æfingaaðilar</button>
+                        <button class="button button-secondary" onclick="manageCustomExercises()" style="background: #4caf50; color: white; border: none; margin-top: 10px;">📝 Sérsniðnar æfingar</button>
+                        <button class="button button-secondary" onclick="editUserInfo()" style="margin-top: 10px;">✏️ Breyta upplýsingum</button>
+                        <button class="button button-secondary" onclick="sendPDFReport()" style="margin-top: 10px;">📄 Senda PDF skýrslu</button>
+                        <button class="button button-secondary" onclick="clearAllData()" style="background: #ff4444; color: white; border: none; margin-top: 10px;">🗑️ Hreinsa öll gögn</button>
+                        
+                        <p style="text-align: center; color: #999; font-size: 11px; margin-top: 30px;">Útgáfa 1.6</p>
+                    </div>
+                `;
+            }
+            
+            // Render bottom navigation
+            bottomNavContainer.innerHTML = renderBottomNav();
         }
 
         // Actions
@@ -1260,11 +1331,13 @@
         }
 
         function showStatistics() {
+            data.currentNavPage = 'stats';
             data.page = 'statistics';
             render();
         }
 
         function backToMain() {
+            data.currentNavPage = 'home';
             data.page = 'main';
             render();
         }
@@ -1496,6 +1569,69 @@
             URL.revokeObjectURL(url);
             
             alert('Skýrsla hefur verið hlaðið niður!\n\nÞú getur sent skrána á: ' + data.instructorEmail);
+        }
+
+        // Navigation functions
+        function navigateTo(page) {
+            data.currentNavPage = page;
+            
+            if (page === 'home') {
+                data.page = 'main';
+            } else if (page === 'add') {
+                newSession();
+                return;
+            } else if (page === 'stats') {
+                showStatistics();
+                return;
+            } else if (page === 'settings') {
+                data.page = 'settings';
+            }
+            
+            render();
+            updateNavigation();
+        }
+
+        function updateNavigation() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                const page = item.getAttribute('data-page');
+                if (page === data.currentNavPage) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+
+        function renderBottomNav() {
+            // Ekki sýna bottom nav ef notandi er ekki innskráður
+            if (!data.user) return '';
+            
+            // Ekki sýna bottom nav í newSession eða öðrum sub-pages
+            if (data.page !== 'main' && data.page !== 'statistics' && data.page !== 'settings') {
+                return '';
+            }
+            
+            return `
+                <div class="bottom-nav">
+                    <div class="nav-item ${data.currentNavPage === 'home' ? 'active' : ''}" data-page="home" onclick="navigateTo('home')">
+                        <div class="icon">🏠</div>
+                        <div class="label">Heim</div>
+                    </div>
+                    <div class="nav-item ${data.currentNavPage === 'add' ? 'active' : ''}" data-page="add" onclick="navigateTo('add')">
+                        <div class="icon">➕</div>
+                        <div class="label">Ný æfing</div>
+                    </div>
+                    <div class="nav-item ${data.currentNavPage === 'stats' ? 'active' : ''}" data-page="stats" onclick="navigateTo('stats')">
+                        <div class="icon">📊</div>
+                        <div class="label">Tölfræði</div>
+                    </div>
+                    <div class="nav-item ${data.currentNavPage === 'settings' ? 'active' : ''}" data-page="settings" onclick="navigateTo('settings')">
+                        <div class="icon">⚙️</div>
+                        <div class="label">Stillingar</div>
+                    </div>
+                </div>
+            `;
         }
 
         // Start
